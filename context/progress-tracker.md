@@ -101,9 +101,10 @@ This includes:
 **Status:** Initializing
 
 #### Tasks Breakdown
-* [ ] Setup Next.js frontend with Tailwind/CSS Modules
-* [ ] Implement Monaco Editor integration
-* [ ] Build real-time result viewer
+* [x] Setup Next.js frontend with Tailwind and Global Tokens
+* [x] Implement Monaco Editor integration
+* [x] Build core UI regions (Navbar, Sidebar, Editor, Output)
+* [ ] Build real-time result viewer (WebSocket/SSE integration)
 * [ ] Implement container pooling in Worker Service
 * [ ] Final end-to-end integration testing
 
