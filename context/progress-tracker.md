@@ -31,30 +31,37 @@ It ensures that:
 
 ### Phase 2 — Robust Execution
 
-**Status:** In Progress (Hardening) 🟡
+**Status:** Completed ✅ (2024-05-05)
+
+---
+
+### Phase 3 — Persistence & Scalability
+
+**Status:** In Progress 🟡
 
 ---
 
 ### 🎯 Phase Objective
 
-Enhance the core pipeline with **reliability, security limits, and multi-language support**.
+Implement persistent storage and high-performance caching to transition from a memory-only pipeline to a production-grade system.
 
 This phase focuses on:
-* Enforcing resource constraints (Time, Memory, CPU)
-* Handling compilation for static languages (C++, Java)
-* Capturing granular error states (TLE, RTE, CE)
+* PostgreSQL integration for job and result persistence
+* Redis integration for fast job status lookups
+* Implementation of the Result Service
+* End-to-end flow completion (API -> Submission -> Scheduler -> Worker -> Evaluation -> Result -> DB)
 
 ---
 
 ## 🎯 Current Goal
 
-### Implement Resource Limits and Compilation Handling
+### Implement PostgreSQL and Redis Integration
 
 This includes:
-* Enforcing execution time limits in the Worker
-* Enforcing memory limits via Docker
-* Setting up compilation environment for C++ and Java
-* Returning structured error results back to the engine
+* Setting up PostgreSQL schema for jobs and results
+* Implementing Result Service for persistence
+* Integrating Redis for status caching
+* Updating API service to query from Redis/DB instead of in-memory store
 
 ---
 
@@ -83,19 +90,16 @@ This includes:
 
 ## 🔄 In Progress
 
-### 🟡 Phase 2: Robustness & Scaling
+### 🟡 Phase 3: Persistence & Scalability
 
 **Status:** Initializing
 
 #### Tasks Breakdown
-* [x] Add time limits enforcement in Worker (C++)
-* [x] Add memory limits enforcement in Docker runtime
-* [x] Implement compilation handling for C++
-* [x] Implement compilation handling for Java
-* [x] Enhance error handling (CE, RTE, TLE, MLE)
-* [x] Add worker health logging
-* [x] Refactor Worker for SRP and modularity (SDE Standards)
-* [x] Implement structured logging for traceability
+* [x] Setup PostgreSQL and Redis with Docker Compose
+* [x] Initialize Result Service project structure
+* [ ] Define Database schemas and migrations
+* [ ] Implement Result Service persistence logic
+* [ ] Integrate Redis for real-time status updates
 
 ---
 
