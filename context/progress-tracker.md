@@ -61,7 +61,8 @@ This includes:
 * Setting up PostgreSQL schema for jobs and results
 * Implementing Result Service for persistence
 * Integrating Redis for status caching
-* Updating API service to query from Redis/DB instead of in-memory store
+* Update **API Service** to fetch results from Redis/DB instead of in-memory.
+* Implement **Prisma** or a robust ORM in `@engine/common` for cross-service DB access.
 
 ---
 
@@ -97,9 +98,10 @@ This includes:
 #### Tasks Breakdown
 * [x] Setup PostgreSQL and Redis with Docker Compose
 * [x] Initialize Result Service project structure
-* [ ] Define Database schemas and migrations
-* [ ] Implement Result Service persistence logic
-* [ ] Integrate Redis for real-time status updates
+* [x] Define Database schemas and migrations (init.sql)
+* [x] Implement Result Service persistence logic (Kafka -> Postgres/Redis)
+* [ ] Update API service to query from Redis/DB
+* [ ] Implement Redis-based rate limiting
 
 ---
 
