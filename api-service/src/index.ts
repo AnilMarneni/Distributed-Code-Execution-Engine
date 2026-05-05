@@ -9,6 +9,8 @@ import { metricsMiddleware, getMetrics } from './utils/metrics';
 import { kafkaService } from './services/kafka.service';
 import { resultService } from './services/result.service';
 import { socketService } from './services/socket.service';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './utils/swagger';
 
 dotenv.config();
 
@@ -27,6 +29,7 @@ app.use(
 );
 
 // Routes
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/v1', submissionRoutes);
 app.get('/metrics', getMetrics);
 
