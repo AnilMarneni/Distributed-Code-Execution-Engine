@@ -7,6 +7,8 @@
 #include "executor/docker_executor.hpp"
 #include "handler/job_handler.hpp"
 #include "utils/logger.hpp"
+#include "utils/metrics.hpp"
+#include <chrono>
 
 using json = nlohmann::json;
 
@@ -42,8 +44,20 @@ int main() {
             
             jobId = config.jobId;
 
+            auto start = std::chrono::high_resolution_clock::now();
+            
             // Handle the job
             ExecutionResult result = handler->handle(config);
+
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+            // Update Metrics
+            WorkerMetrics::getInstance().incrementJobsProcessed();
+            WorkerMetrics::getInstance().recordExecutionTime(duration);
+            if (result.status == "error" || result.status == "system_error") {
+                WorkerMetrics::getInstance().incrementJobsFailed();
+            }
 
             // Construct response
             json resJson;
@@ -84,6 +98,10 @@ int main() {
         health["version"] = "1.1.0";
         health["capabilities"] = {"python", "cpp", "java"};
         res.set_content(health.dump(), "application/json");
+    });
+
+    svr.Get("/metrics", [](const httplib::Request&, httplib::Response& res) {
+        res.set_content(WorkerMetrics::getInstance().getPrometheusFormat(), "text/plain");
     });
 
     int port = 4000;

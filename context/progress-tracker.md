@@ -49,32 +49,36 @@ It ensures that:
 
 ### Phase 5 — Production Hardening & Monitoring
 
+**Status:** Completed ✅ (2024-05-05)
+
+---
+
+### Phase 6 — Advanced Intelligence & Scaling
+
 **Status:** In Progress 🟡
 
 ---
 
 ### 🎯 Phase Objective
 
-Transform the engine into a production-ready system with deep observability, auto-scaling, and industry-standard CI/CD.
+Introduce intelligent scaling and AI-driven security to the execution pipeline, moving beyond static orchestration.
 
 This phase focuses on:
-* Prometheus & Grafana for system-wide metrics
-* Centralized logging (ELK Stack / Winston)
-* Kubernetes orchestration (Helm Charts)
-* GitHub Actions CI/CD pipeline
-* Advanced Load Balancing for workers
+* Kafka Lag-based Auto-scaling for workers
+* AI-powered pre-execution security scanning
+* gVisor/Firecracker integration for hardened isolation
+* Global distribution and multi-region result replication
 
 ---
 
 ## 🎯 Current Goal
 
-### Implement System-Wide Observability and CI/CD
+### Implement Intelligent Auto-scaling
 
 This includes:
-* Setting up Prometheus metrics in all services
-* Creating Grafana dashboards for throughput and latency
-* Implementing Winston/Morgan for structured logging in Node.js
-* Writing GitHub Actions for automated testing and Docker builds
+* Developing a Kafka consumer lag monitor
+* Implementing dynamic worker provisioning logic
+* Integrating a pre-execution security scanner using LLM APIs
 
 ---
 
@@ -103,19 +107,16 @@ This includes:
 
 ## 🔄 In Progress
 
-### 🟡 Phase 5: Production Hardening & Monitoring
+### 🟡 Phase 6: Advanced Intelligence & Scaling
 
 **Status:** Initializing
 
 #### Tasks Breakdown
-* [x] Integrate Prometheus middleware in API & Scheduler
-* [ ] Add Prometheus exporter to C++ Worker
-* [ ] Setup Grafana with pre-defined dashboards
-* [x] Implement centralized logging with correlation IDs (Winston)
-* [ ] Create Helm charts for Kubernetes deployment
-* [x] Setup GitHub Actions for CI/CD
-* [x] Implement Redis-backed Rate Limiting in API
-* [x] Implement Real-time WebSockets for job results
+* [ ] Implement Kafka Lag Monitor service
+* [ ] Develop dynamic worker scaling logic (Scale-to-Zero)
+* [ ] Integrate OpenAI/Gemini for code security scanning
+* [ ] Research gVisor integration for runtime isolation
+* [ ] Implement cross-region result replication
 
 ---
 
@@ -161,10 +162,9 @@ This includes:
 * Docker is successfully sandboxing the execution.
 
 ### Immediate Next Action
-➡️ Implement **Prometheus Exporter** for the C++ Worker.
-➡️ Set up **Grafana** with dashboards for execution metrics.
-➡️ Build **Helm Charts** for standardized Kubernetes orchestration.
-➡️ Integrate **Prisma ORM** for structured database management.
+➡️ Develop a **Kafka Lag Monitor** in Node.js to track queue depth.
+➡️ Implement **Dynamic Worker Scaling** based on observed lag.
+➡️ Add **AI-powered security scanning** to the API Service pipeline.
 
 ---
 
