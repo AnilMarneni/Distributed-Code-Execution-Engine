@@ -1,165 +1,98 @@
 #include <iostream>
 #include <string>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <cstdio>
 #include <memory>
-#include <stdexcept>
-#include <array>
 #include "../include/httplib.h"
 #include "../include/json.hpp"
+#include "models/job_models.hpp"
+#include "executor/docker_executor.hpp"
+#include "handler/job_handler.hpp"
+#include "utils/logger.hpp"
 
 using json = nlohmann::json;
 
-struct CommandResult {
-    std::string output;
-    int exitCode;
-};
-
-CommandResult execute_command(const std::string& cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    // Redirect stderr to stdout to capture errors
-    std::string full_cmd = cmd + " 2>&1";
-    
-    // In Windows popen returns the exit code via pclose
-    FILE* pipe = popen(full_cmd.c_str(), "r");
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    
-    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-        result += buffer.data();
-    }
-    
-    int status = pclose(pipe);
-    return {result, status};
-}
-
-std::string escape_for_shell(const std::string& code) {
-    std::string escaped = code;
-    size_t pos = 0;
-    while ((pos = escaped.find("\"", pos)) != std::string::npos) {
-        escaped.replace(pos, 1, "\\\"");
-        pos += 2;
-    }
-    // Also escape backslashes for Python
-    pos = 0;
-    while ((pos = escaped.find("\\", pos)) != std::string::npos) {
-        // Only escape if it's not already escaped or part of a valid escape sequence
-        // For simplicity in MVP, we'll just double them
-        escaped.replace(pos, 1, "\\\\");
-        pos += 2;
-    }
-    return escaped;
-}
-
-#include <filesystem>
-namespace fs = std::filesystem;
-
 int main() {
     httplib::Server svr;
+    
+    // Initialize components
+    auto executor = std::make_unique<DockerExecutor>();
+    auto handler = std::make_shared<JobHandler>(std::move(executor));
 
-    // Ensure temp directory exists
-    fs::create_directories("temp");
+    Logger::log(LogLevel::INFO, "", "Worker Service initializing...");
 
-    svr.Post("/execute", [](const httplib::Request& req, httplib::Response& res) {
+    svr.Post("/execute", [handler](const httplib::Request& req, httplib::Response& res) {
         std::string jobId = "unknown";
-        std::string tempFilePath = "";
         try {
             auto j = json::parse(req.body);
-            std::string code = j["code"];
-            std::string language = j["language"];
-            jobId = j["jobId"];
-            int timeLimitMs = j.value("timeLimit", 2000);
-            int memoryLimitMb = j.value("memoryLimit", 128);
-
-            std::cout << "Received job " << jobId << " (Language: " << language << ")" << std::endl;
-
-            std::string ext = (language == "python") ? "py" : (language == "cpp") ? "cpp" : "java";
-            tempFilePath = "temp/" + jobId + "." + ext;
             
-            // Write code to file
-            std::ofstream outFile(tempFilePath);
-            outFile << code;
-            outFile.close();
-
-            // Get absolute path for Docker volume mounting
-            std::string absPath = fs::absolute(tempFilePath).string();
+            JobConfig config;
+            config.jobId = j.at("jobId").get<std::string>();
+            config.code = j.at("code").get<std::string>();
+            config.language = j.at("language").get<std::string>();
+            config.timeLimitMs = j.value("timeLimit", 2000);
+            config.memoryLimitMb = j.value("memoryLimit", 128);
             
-            float timeLimitSec = static_cast<float>(timeLimitMs) / 1000.0f;
-            std::stringstream timeLimitStr;
-            timeLimitStr << timeLimitSec;
-            std::string memLimitStr = std::to_string(memoryLimitMb) + "m";
-
-            CommandResult cmdRes;
-            std::string status = "success";
-            std::string dockerCmd = "";
-
-            if (language == "python") {
-                dockerCmd = "docker run --rm --network none --memory " + memLimitStr + 
-                            " --memory-swap " + memLimitStr + 
-                            " -v \"" + absPath + ":/app/main.py:ro\" " +
-                            " python:3.9-slim timeout " + timeLimitStr.str() + "s python3 /app/main.py";
-            } else if (language == "cpp") {
-                dockerCmd = "docker run --rm --network none --memory " + memLimitStr + 
-                            " --memory-swap " + memLimitStr + 
-                            " -v \"" + absPath + ":/app/main.cpp:ro\" " +
-                            " gcc:latest bash -c \"g++ /app/main.cpp -o /tmp/main || exit 10; timeout " + timeLimitStr.str() + "s /tmp/main\"";
-            } else if (language == "java") {
-                dockerCmd = "docker run --rm --network none --memory " + memLimitStr + 
-                            " --memory-swap " + memLimitStr + 
-                            " -v \"" + absPath + ":/app/Main.java:ro\" " +
-                            " eclipse-temurin:11-jdk bash -c \"javac /app/Main.java -d /tmp || exit 10; timeout " + timeLimitStr.str() + "s java -cp /tmp Main\"";
-            }
-
-            if (!dockerCmd.empty()) {
-                std::cout << "Executing: " << dockerCmd << std::endl;
-                cmdRes = execute_command(dockerCmd);
-
-                if (cmdRes.exitCode == 10) {
-                    status = "compilation_error";
-                } else if (cmdRes.exitCode == 124) {
-                    status = "timeout";
-                } else if (cmdRes.exitCode == 137) {
-                    status = "memory_limit_exceeded";
-                } else if (cmdRes.exitCode != 0) {
-                    status = "error";
+            if (j.contains("testCases") && j["testCases"].is_array()) {
+                for (const auto& tcJson : j["testCases"]) {
+                    TestCase tc;
+                    tc.input = tcJson.value("input", "");
+                    tc.expectedOutput = tcJson.value("expectedOutput", "");
+                    config.testCases.push_back(tc);
                 }
-            } else {
-                cmdRes.output = "Language not supported yet";
-                status = "error";
+            }
+            
+            jobId = config.jobId;
+
+            // Handle the job
+            ExecutionResult result = handler->handle(config);
+
+            // Construct response
+            json resJson;
+            resJson["status"] = result.status;
+            resJson["jobId"] = result.jobId;
+            resJson["testCases"] = json::array();
+
+            for (const auto& tcRes : result.testCases) {
+                json tcJson;
+                tcJson["output"] = tcRes.output;
+                tcJson["exitCode"] = tcRes.exitCode;
+                tcJson["status"] = tcRes.status;
+                resJson["testCases"].push_back(tcJson);
             }
 
-            json result;
-            result["status"] = status;
-            result["output"] = cmdRes.output;
-            result["jobId"] = jobId;
-            result["exitCode"] = cmdRes.exitCode;
+            res.set_content(resJson.dump(), "application/json");
 
-            res.set_content(result.dump(), "application/json");
-
-            // Clean up
-            fs::remove(tempFilePath);
-
+        } catch (const json::exception& e) {
+            Logger::log(LogLevel::ERROR, jobId, "JSON Parsing Error: " + std::string(e.what()));
+            json err;
+            err["status"] = "error";
+            err["message"] = "Invalid JSON payload";
+            res.status = 400;
+            res.set_content(err.dump(), "application/json");
         } catch (const std::exception& e) {
-            if (!tempFilePath.empty()) fs::remove(tempFilePath);
+            Logger::log(LogLevel::ERROR, jobId, "Unexpected Error: " + std::string(e.what()));
             json err;
             err["status"] = "error";
             err["message"] = e.what();
-            err["jobId"] = jobId;
             res.status = 500;
             res.set_content(err.dump(), "application/json");
         }
     });
 
     svr.Get("/health", [](const httplib::Request&, httplib::Response& res) {
-        res.set_content("{\"status\":\"UP\"}", "application/json");
+        json health;
+        health["status"] = "UP";
+        health["version"] = "1.1.0";
+        health["capabilities"] = {"python", "cpp", "java"};
+        res.set_content(health.dump(), "application/json");
     });
 
-    std::cout << "Worker Service starting on port 4000..." << std::endl;
-    svr.listen("0.0.0.0", 4000);
+    int port = 4000;
+    Logger::log(LogLevel::INFO, "", "Worker Service starting on port " + std::to_string(port));
+    
+    if (!svr.listen("0.0.0.0", port)) {
+        Logger::log(LogLevel::ERROR, "", "Failed to start server on port " + std::to_string(port));
+        return 1;
+    }
 
     return 0;
 }

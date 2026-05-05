@@ -21,15 +21,33 @@ export interface JobPayload extends SubmissionRequest {
   submittedAt: string;
 }
 
+export interface TestCaseResult {
+  input: string;
+  output: string;
+  expectedOutput: string;
+  status: 'AC' | 'WA' | 'TLE' | 'RTE' | 'CE';
+  executionTime: number;
+  memoryUsed: number;
+}
+
 export interface JobResult {
   jobId: string;
   status: 'SUCCESS' | 'FAILED' | 'TIMEOUT' | 'ERROR';
-  testCaseResults: Array<{
-    input: string;
-    output: string;
-    expectedOutput: string;
-    status: 'AC' | 'WA' | 'TLE' | 'RTE' | 'CE';
-    executionTime: number;
-    memoryUsed: number;
-  }>;
+  testCaseResults: TestCaseResult[];
+}
+
+export interface RawTestCaseResult {
+  output: string;
+  exitCode: number;
+  status: string;
+}
+
+export interface RawWorkerResult {
+  jobId: string;
+  testCases: RawTestCaseResult[];
+}
+
+export interface EvaluationPayload {
+  job: JobPayload;
+  workerResult: RawWorkerResult;
 }

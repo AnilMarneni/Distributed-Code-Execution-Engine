@@ -51,32 +51,23 @@ class SchedulerService {
 
       console.log(`Received result from worker ${worker.id} for job ${job.jobId}`);
 
-      // Transform to JobResult
-      const jobResult: JobResult = {
-        jobId: job.jobId,
-        status: workerResult.status === 'success' ? 'SUCCESS' : 'FAILED',
-        testCaseResults: [
-          {
-            input: job.testCases[0].input,
-            output: workerResult.output,
-            expectedOutput: job.testCases[0].expectedOutput,
-            status: workerResult.status === 'success' ? 'AC' : 'RTE',
-            executionTime: 0, // In Step 1.4 we don't have metrics yet
-            memoryUsed: 0
-          }
-        ]
-      };
-
-      await kafkaService.sendResult(jobResult);
+      // Forward to Evaluation Service via Kafka
+      await kafkaService.sendRawResult({
+        job,
+        workerResult
+      });
+      
     } catch (error) {
       console.error(`Error in dispatchToWorker for job ${job.jobId}:`, error);
-      // Send failure result
-      const failResult: JobResult = {
-        jobId: job.jobId,
-        status: 'ERROR',
-        testCaseResults: []
-      };
-      await kafkaService.sendResult(failResult);
+      // Send a system error raw result
+      await kafkaService.sendRawResult({
+        job,
+        workerResult: {
+          status: 'error',
+          output: (error as Error).message,
+          exitCode: -1
+        }
+      });
     }
   }
 }

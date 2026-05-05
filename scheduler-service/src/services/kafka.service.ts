@@ -1,6 +1,6 @@
 import { Kafka, Consumer, Producer, Partitioners } from 'kafkajs';
 import dotenv from 'dotenv';
-import { JobPayload, JobResult } from '@engine/common';
+import { JobPayload, JobResult, EvaluationPayload } from '@engine/common';
 
 dotenv.config();
 
@@ -51,6 +51,17 @@ class KafkaService {
     } catch (error) {
       console.error('Error connecting to Kafka Producer (Scheduler):', error);
     }
+  }
+
+
+  async sendRawResult(result: EvaluationPayload) {
+    if (!this.isProducerConnected) {
+      await this.connectProducer();
+    }
+    await this.producer.send({
+      topic: 'raw_results',
+      messages: [{ value: JSON.stringify(result) }]
+    });
   }
 
   async sendResult(result: JobResult) {

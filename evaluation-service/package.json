@@ -1,0 +1,22 @@
+{
+  "name": "evaluation-service",
+  "version": "1.0.0",
+  "description": "Evaluation service for comparing code output with expected results",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@engine/common": "file:../common",
+    "kafkajs": "^2.2.4",
+    "dotenv": "^16.3.1",
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.1.6"
+  }
+}

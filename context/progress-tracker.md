@@ -31,7 +31,7 @@ It ensures that:
 
 ### Phase 2 — Robust Execution
 
-**Status:** In Progress 🟡
+**Status:** In Progress (Hardening) 🟡
 
 ---
 
@@ -93,7 +93,9 @@ This includes:
 * [x] Implement compilation handling for C++
 * [x] Implement compilation handling for Java
 * [x] Enhance error handling (CE, RTE, TLE, MLE)
-* [ ] Add worker health logging
+* [x] Add worker health logging
+* [x] Refactor Worker for SRP and modularity (SDE Standards)
+* [x] Implement structured logging for traceability
 
 ---
 
@@ -139,7 +141,8 @@ This includes:
 * Docker is successfully sandboxing the execution.
 
 ### Immediate Next Action
-➡️ Implement **Time and Memory Limits** in the C++ Worker.
+➡️ Implement **rlimit** or additional container security constraints.
+➡️ Set up **Prometheus Metrics** for worker health.
 
 ---
 
