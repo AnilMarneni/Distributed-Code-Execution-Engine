@@ -1,6 +1,7 @@
 import { JobPayload, JobResult } from '@engine/common';
 import axios from 'axios';
 import { kafkaService } from './kafka.service';
+import { jobsDispatchedCounter } from '../utils/metrics';
 
 interface WorkerInfo {
   id: string;
@@ -46,6 +47,7 @@ class SchedulerService {
 
   private async dispatchToWorker(worker: WorkerInfo, job: JobPayload) {
     try {
+      jobsDispatchedCounter.labels(worker.id).inc();
       const response = await axios.post(`${worker.url}/execute`, job);
       const workerResult = response.data;
 

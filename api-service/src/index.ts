@@ -5,6 +5,8 @@ import submissionRoutes from './routes/submission.routes';
 import { kafkaService } from './services/kafka.service';
 import { resultService } from './services/result.service';
 
+import { metricsMiddleware, getMetrics } from './utils/metrics';
+
 dotenv.config();
 
 const app = express();
@@ -13,9 +15,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(metricsMiddleware);
 
 // Routes
 app.use('/api/v1', submissionRoutes);
+app.get('/metrics', getMetrics);
 
 // Health check
 app.get('/health', (req, res) => {
