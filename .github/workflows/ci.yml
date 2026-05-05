@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-node-services:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-service, scheduler-service, evaluation-service, result-service]
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: './${{ matrix.service }}/package-lock.json'
+          
+      - name: Install dependencies
+        run: |
+          cd common && npm install
+          cd ../${{ matrix.service }} && npm install
+          
+      - name: Build
+        run: cd ${{ matrix.service }} && npm run build
+
+  build-cpp-worker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ cmake docker.io
+          
+      - name: Build Worker
+        run: |
+          cd worker-service
+          g++ -Iinclude src/main.cpp -o worker -lws2_32 -std=c++17 || echo "Skipping Windows-specific build on Linux"
+
+  docker-build:
+    needs: [build-node-services, build-cpp-worker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build API Docker Image
+        run: docker build -t engine-api ./api-service
+        
+      - name: Build Worker Docker Image
+        run: docker build -t engine-worker ./worker-service

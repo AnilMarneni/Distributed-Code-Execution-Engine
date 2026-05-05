@@ -108,12 +108,14 @@ This includes:
 **Status:** Initializing
 
 #### Tasks Breakdown
-* [ ] Integrate Prometheus middleware in API & Scheduler
+* [x] Integrate Prometheus middleware in API & Scheduler
 * [ ] Add Prometheus exporter to C++ Worker
 * [ ] Setup Grafana with pre-defined dashboards
-* [ ] Implement centralized logging with correlation IDs
+* [x] Implement centralized logging with correlation IDs (Winston)
 * [ ] Create Helm charts for Kubernetes deployment
-* [ ] Setup GitHub Actions for CI/CD
+* [x] Setup GitHub Actions for CI/CD
+* [x] Implement Redis-backed Rate Limiting in API
+* [x] Implement Real-time WebSockets for job results
 
 ---
 
@@ -159,8 +161,10 @@ This includes:
 * Docker is successfully sandboxing the execution.
 
 ### Immediate Next Action
-➡️ Implement **rlimit** or additional container security constraints.
-➡️ Set up **Prometheus Metrics** for worker health.
+➡️ Implement **Prometheus Exporter** for the C++ Worker.
+➡️ Set up **Grafana** with dashboards for execution metrics.
+➡️ Build **Helm Charts** for standardized Kubernetes orchestration.
+➡️ Integrate **Prisma ORM** for structured database management.
 
 ---
 

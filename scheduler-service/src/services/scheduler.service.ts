@@ -2,6 +2,7 @@ import { JobPayload, JobResult } from '@engine/common';
 import axios from 'axios';
 import { kafkaService } from './kafka.service';
 import { jobsDispatchedCounter } from '../utils/metrics';
+import { logger } from '../utils/logger';
 
 interface WorkerInfo {
   id: string;
@@ -20,12 +21,12 @@ class SchedulerService {
     const worker = this.getNextWorker();
     
     if (!worker) {
-      console.error(`No available workers for job: ${job.jobId}`);
+      logger.error(`No available workers for job: ${job.jobId}`);
       // In a real system, we might requeue or alert
       return;
     }
 
-    console.log(`Scheduling job ${job.jobId} to worker ${worker.id} at ${worker.url}`);
+    logger.info(`Scheduling job ${job.jobId} to worker ${worker.id} at ${worker.url}`);
     
     // In Step 1.4, we will implement the actual call to the worker.
     // For now, we'll just log it.
@@ -33,7 +34,7 @@ class SchedulerService {
         // Mocking the dispatch
         await this.dispatchToWorker(worker, job);
     } catch (error) {
-        console.error(`Failed to dispatch job ${job.jobId} to worker ${worker.id}:`, error);
+        logger.error(`Failed to dispatch job ${job.jobId} to worker ${worker.id}: ${error}`);
     }
   }
 
@@ -51,7 +52,7 @@ class SchedulerService {
       const response = await axios.post(`${worker.url}/execute`, job);
       const workerResult = response.data;
 
-      console.log(`Received result from worker ${worker.id} for job ${job.jobId}`);
+      logger.info(`Received result from worker ${worker.id} for job ${job.jobId}`);
 
       // Forward to Evaluation Service via Kafka
       await kafkaService.sendRawResult({
@@ -60,7 +61,7 @@ class SchedulerService {
       });
       
     } catch (error) {
-      console.error(`Error in dispatchToWorker for job ${job.jobId}:`, error);
+      logger.error(`Error in dispatchToWorker for job ${job.jobId}: ${error}`);
       // Send a system error raw result
       await kafkaService.sendRawResult({
         job,

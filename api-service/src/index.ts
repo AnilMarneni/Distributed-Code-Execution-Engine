@@ -1,11 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import morgan from 'morgan';
 import submissionRoutes from './routes/submission.routes';
+import { logger } from './utils/logger';
+import { metricsMiddleware, getMetrics } from './utils/metrics';
 import { kafkaService } from './services/kafka.service';
 import { resultService } from './services/result.service';
-
-import { metricsMiddleware, getMetrics } from './utils/metrics';
+import { socketService } from './services/socket.service';
 
 dotenv.config();
 
@@ -16,6 +19,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(metricsMiddleware);
+app.use(
+  morgan(
+    ':method :url :status :res[content-length] - :response-time ms',
+    { stream: { write: (message) => logger.http(message.trim()) } }
+  )
+);
 
 // Routes
 app.use('/api/v1', submissionRoutes);
@@ -26,8 +35,15 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP' });
 });
 
+
+
+const httpServer = createServer(app);
+
 // Start server
 const startServer = async () => {
+  // Init Socket Service
+  socketService.init(httpServer);
+
   // Connect to Kafka Producer
   await kafkaService.connect();
 
@@ -35,15 +51,19 @@ const startServer = async () => {
   await kafkaService.connectConsumer(async (topic, message) => {
     if (topic === 'job_results') {
       resultService.setResult(message);
+      // Emit to WebSockets
+      if (message.jobId) {
+        socketService.emitResult(message.jobId, message);
+      }
     }
   });
 
-  app.listen(PORT, () => {
-    console.log(`API Service is running on port ${PORT}`);
+  httpServer.listen(PORT, () => {
+    logger.info(`API Service (with WebSockets) is running on port ${PORT}`);
   });
 };
 
 startServer().catch(err => {
-  console.error('Failed to start server:', err);
+  logger.error('Failed to start server:', err);
   process.exit(1);
 });
