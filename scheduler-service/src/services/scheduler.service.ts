@@ -16,7 +16,7 @@ axiosRetry(axios, {
 interface WorkerInfo {
   id: string;
   url: string;
-  status: 'IDLE' | 'BUSY' | 'OFFLINE';
+  status: 'IDLE' | 'BUSY' | 'DOWN';
 }
 
 class SchedulerService {
@@ -36,7 +36,32 @@ class SchedulerService {
 
     this.breaker.on('open', () => logger.warn('CIRCUIT BREAKER OPEN: Worker dispatching suspended'));
     this.breaker.on('close', () => logger.info('CIRCUIT BREAKER CLOSED: Worker dispatching resumed'));
-    this.breaker.on('halfOpen', () => logger.info('CIRCUIT BREAKER HALF-OPEN: Testing worker health'));
+    
+    this.startHealthCheck();
+  }
+
+  private startHealthCheck() {
+    setInterval(async () => {
+      for (const worker of this.workers) {
+        try {
+          await axios.get(`${worker.url}/health`, { timeout: 2000 });
+          if (worker.status !== 'IDLE') logger.info(`Worker ${worker.id} is back UP`);
+          worker.status = 'IDLE';
+        } catch (error) {
+          if (worker.status !== 'DOWN') logger.warn(`Worker ${worker.id} is DOWN`);
+          worker.status = 'DOWN';
+        }
+      }
+    }, 10000); // Every 10 seconds
+  }
+
+  private getNextWorker(): WorkerInfo | null {
+    const availableWorkers = this.workers.filter(w => w.status !== 'DOWN');
+    if (availableWorkers.length === 0) return null;
+    
+    const worker = availableWorkers[this.currentWorkerIndex % availableWorkers.length];
+    this.currentWorkerIndex++;
+    return worker;
   }
 
   async scheduleJob(job: JobPayload) {
@@ -54,14 +79,6 @@ class SchedulerService {
     } catch (error) {
         logger.error(`Circuit Breaker / Dispatch error for job ${job.jobId}: ${error}`);
     }
-  }
-
-  private getNextWorker(): WorkerInfo | null {
-    if (this.workers.length === 0) return null;
-    
-    const worker = this.workers[this.currentWorkerIndex];
-    this.currentWorkerIndex = (this.currentWorkerIndex + 1) % this.workers.length;
-    return worker;
   }
 
   private async dispatchToWorker(worker: WorkerInfo, job: JobPayload) {

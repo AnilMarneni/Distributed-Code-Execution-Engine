@@ -6,6 +6,8 @@ A production-grade, highly scalable, and secure distributed system designed to e
 
 ## 🏗️ System Architecture
 
+![Distributed Code Execution & Evaluation Engine Architecture](./docs/Architecture.png)
+
 The engine follows a **decoupled, event-driven microservices architecture** using **Apache Kafka** as the central message backbone.
 
 ### 🧩 Core Services
@@ -79,14 +81,14 @@ Once started, visit `http://localhost:3000/api-docs` to explore the API via Swag
 
 ## 🗺️ Project Roadmap
 
-- [x] **Phase 1**: Core Execution Pipeline
-- [x] **Phase 2**: Robustness & Hardening
-- [x] **Phase 3**: Persistence Layer
-- [x] **Phase 4**: Frontend Dashboard
-- [x] **Phase 5**: Production Hardening & Observability
-- [x] **Phase 6**: AI Security & Intelligent Scaling
-- [x] **Phase 7**: Resilience & Developer Experience
-- [x] **Phase 8**: Final Readiness & Documentation
+-  **Phase 1**: Core Execution Pipeline
+-  **Phase 2**: Robustness & Hardening
+-  **Phase 3**: Persistence Layer
+-  **Phase 4**: Frontend Dashboard
+-  **Phase 5**: Production Hardening & Observability
+-  **Phase 6**: AI Security & Intelligent Scaling
+-  **Phase 7**: Resilience & Developer Experience
+-  **Phase 8**: Final Readiness & Documentation
 
 ---
 
