@@ -13,6 +13,9 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Routes
+app.use('/api/submissions', require('./routes/submission.routes'));
+
 // Basic health check route
 app.get('/api/health', (req, res) => {
   res.status(200).json({
