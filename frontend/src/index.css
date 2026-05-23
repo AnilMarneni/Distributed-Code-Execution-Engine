@@ -1,0 +1,225 @@
+:root {
+  --color-bg-base: #0b0c10;
+  --color-bg-surface: #1f2833;
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #c5c6c7;
+  --color-text-muted: #8d8d8d;
+  --color-accent: #66fcf1;
+  --color-accent-hover: #45a29e;
+  --color-success: #2ecc71;
+  --color-error: #e74c3c;
+  --color-warning: #f1c40f;
+  --color-border: #1f2833;
+  --color-card-bg: #151a21;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-base);
+}
+::-webkit-scrollbar-thumb {
+  background: #2b3540;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-hover);
+}
+
+/* Main Grid Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+header {
+  height: 60px;
+  background-color: var(--color-card-bg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: justify;
+  padding: 0 24px;
+  z-index: 10;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  height: calc(100vh - 60px);
+}
+
+.editor-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  background-color: #0d1117;
+}
+
+.sidebar-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-card-bg);
+  overflow-y: auto;
+}
+
+/* Card components */
+.panel {
+  padding: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Controls */
+select, textarea, button, input {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.select-control {
+  width: 100%;
+  padding: 10px 14px;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.textarea-control {
+  width: 100%;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  padding: 12px;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  width: 100%;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: #0b0c10;
+}
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+}
+.btn-primary:disabled {
+  background-color: #2b3540;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #2b3540;
+  color: var(--color-text-primary);
+}
+.btn-secondary:hover {
+  background-color: #3b4857;
+}
+
+/* Verdict Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-ac { background-color: rgba(46, 204, 113, 0.15); color: var(--color-success); border: 1px solid rgba(46, 204, 113, 0.3); }
+.badge-wa { background-color: rgba(231, 76, 60, 0.15); color: var(--color-error); border: 1px solid rgba(231, 76, 60, 0.3); }
+.badge-tle { background-color: rgba(241, 196, 110, 0.15); color: var(--color-warning); border: 1px solid rgba(241, 196, 110, 0.3); }
+.badge-rte { background-color: rgba(231, 76, 60, 0.15); color: var(--color-error); border: 1px solid rgba(231, 76, 60, 0.3); }
+.badge-ce { background-color: rgba(241, 196, 110, 0.15); color: var(--color-warning); border: 1px solid rgba(241, 196, 110, 0.3); }
+.badge-pending { background-color: rgba(255, 255, 255, 0.05); color: var(--color-text-secondary); border: 1px solid rgba(255, 255, 255, 0.1); }
+.badge-running { background-color: rgba(102, 252, 241, 0.15); color: var(--color-accent); border: 1px solid rgba(102, 252, 241, 0.3); }
+
+/* History List */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-item {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: #2b3540;
+}
+
+.history-item.active {
+  border-color: var(--color-accent);
+  background-color: rgba(102, 252, 241, 0.02);
+}
