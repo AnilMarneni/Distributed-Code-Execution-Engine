@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import OutputPanel from './components/OutputPanel';
-import { Code2, Play, Terminal, Database, RefreshCw, PlusCircle, CheckCircle, FileCode } from 'lucide-react';
+import { Code2, Play, Database, RefreshCw, PlusCircle, FileCode } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -66,6 +66,7 @@ export default function App() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHistory();
   }, []);
 
