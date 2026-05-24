@@ -1,6 +1,8 @@
 # Secure Multi-Language Code Execution Platform
 
-![Platform Screenshot](docs/screenshot.png)
+![Platform Screenshot](docs/cpp-screenshot.png)
+![Platform Screenshot](docs/python-screenshot.png)
+![Platform Screenshot](docs/node-screenshot.png)
 
 A polished, systems-focused MERN stack application designed to securely execute and evaluate untrusted user code in C++, Python, and JavaScript. The system utilizes Docker containerization to enforce basic security constraints (CPU, memory, process limits, and network isolation) and persists execution records in MongoDB.
 
