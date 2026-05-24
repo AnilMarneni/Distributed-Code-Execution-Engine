@@ -53,7 +53,8 @@ class SandboxService {
       let compiledBinaryName = null;
       if (language === 'cpp') {
         compiledBinaryName = `bin_${submissionId}`;
-        const compileCmd = `docker run --rm -v "${absTempDir}:/app" gcc:latest g++ /app/${sourceFileName} -o /app/${compiledBinaryName}`;
+        const compileContainerName = `compile_${submissionId}`;
+        const compileCmd = `docker run --rm --name ${compileContainerName} -v "${absTempDir}:/app" gcc:latest g++ /app/${sourceFileName} -o /app/${compiledBinaryName}`;
         
         console.log(`[Sandbox] Compiling C++ code for job ${submissionId}...`);
         const compileResult = await this.runCommand(compileCmd, 15000);
@@ -85,17 +86,18 @@ class SandboxService {
         const timeLimitSec = (timeLimitMs / 1000).toFixed(1);
         const memLimitStr = `${memoryLimitMb}m`;
 
+        const containerName = `sandbox_${submissionId}_${i}`;
         // Compose the execution script with basic docker isolation guardrails
         if (language === 'cpp') {
-          runCmd = `docker run --rm -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
+          runCmd = `docker run --rm --name ${containerName} -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
                    `-v "${absTempDir}/${compiledBinaryName}:/app/main:ro" -v "${absInputFilePath}:/app/input.txt:ro" ` +
                    `gcc:latest bash -c "ulimit -u 30; timeout ${timeLimitSec}s /app/main < /app/input.txt"`;
         } else if (language === 'python') {
-          runCmd = `docker run --rm -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
+          runCmd = `docker run --rm --name ${containerName} -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
                    `-v "${absSourceFilePath}:/app/main.py:ro" -v "${absInputFilePath}:/app/input.txt:ro" ` +
                    `python:3.11-slim bash -c "ulimit -u 30; timeout ${timeLimitSec}s python /app/main.py < /app/input.txt"`;
         } else if (language === 'javascript') {
-          runCmd = `docker run --rm -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
+          runCmd = `docker run --rm --name ${containerName} -i --network none --memory ${memLimitStr} --memory-swap ${memLimitStr} ` +
                    `-v "${absSourceFilePath}:/app/main.js:ro" -v "${absInputFilePath}:/app/input.txt:ro" ` +
                    `node:18-alpine sh -c "ulimit -u 30; timeout ${timeLimitSec}s node /app/main.js < /app/input.txt"`;
         } else {
@@ -112,10 +114,10 @@ class SandboxService {
         // Map execution exit codes to standards (timeout: 124, OOM: 137)
         if (runResult.exitCode === 124) {
           tcVerdict = 'TLE';
-          tcOutput = 'Time Limit Exceeded';
+          tcOutput = 'Execution Timeout Exceeded';
         } else if (runResult.exitCode === 137) {
           tcVerdict = 'RTE';
-          tcOutput = 'Memory Limit Exceeded / Out Of Memory';
+          tcOutput = 'Memory Limit Exceeded';
         } else if (runResult.exitCode !== 0) {
           tcVerdict = 'RTE';
           tcOutput = runResult.stderr || 'Runtime Error';
@@ -146,8 +148,8 @@ class SandboxService {
       };
 
     } finally {
-      // Guaranteed cleanup of all created temporary file configurations
-      this.cleanupFiles(submissionId, fileExt);
+      // Guaranteed cleanup of all created temporary file configurations and containers
+      this.cleanupFiles(submissionId, fileExt, testCases.length);
     }
   }
 
@@ -160,19 +162,34 @@ class SandboxService {
     }
   }
 
-  cleanupFiles(submissionId, fileExt) {
+  cleanupFiles(submissionId, fileExt, testCasesCount = 0) {
+    // 1. Clean up temporary files
     try {
-      const files = fs.readdirSync(this.tempDir);
-      for (const file of files) {
-        if (file.includes(submissionId)) {
-          const filePath = path.join(this.tempDir, file);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+      if (fs.existsSync(this.tempDir)) {
+        const files = fs.readdirSync(this.tempDir);
+        for (const file of files) {
+          if (file.includes(submissionId)) {
+            const filePath = path.join(this.tempDir, file);
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
+            }
           }
         }
       }
     } catch (error) {
       console.error(`[Sandbox] Failed to cleanup files for submission ${submissionId}: ${error.message}`);
+    }
+
+    // 2. Prevent resource leaks by force-removing containers that might still be active/hanging
+    try {
+      exec(`docker rm -f compile_${submissionId}`, () => {});
+      if (testCasesCount > 0) {
+        for (let i = 0; i < testCasesCount; i++) {
+          exec(`docker rm -f sandbox_${submissionId}_${i}`, () => {});
+        }
+      }
+    } catch (error) {
+      console.error(`[Sandbox] Failed to cleanup containers for submission ${submissionId}: ${error.message}`);
     }
   }
 }

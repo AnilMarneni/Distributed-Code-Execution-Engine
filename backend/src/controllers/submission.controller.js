@@ -6,19 +6,58 @@ exports.submitCode = async (req, res) => {
   try {
     const { code, language, testCases, timeLimit, memoryLimit } = req.body;
 
-    if (!code || !language || !testCases || !Array.isArray(testCases) || testCases.length === 0) {
-      return res.status(400).json({ error: 'Code, language, and non-empty test cases are required.' });
+    if (!code || typeof code !== 'string' || !code.trim()) {
+      return res.status(400).json({ error: 'Source code cannot be empty.' });
     }
 
-    if (!['cpp', 'python', 'javascript'].includes(language)) {
+    if (!language || !['cpp', 'python', 'javascript'].includes(language)) {
       return res.status(400).json({ error: 'Unsupported language. Allowed: cpp, python, javascript.' });
+    }
+
+    if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
+      return res.status(400).json({ error: 'At least one testcase is required.' });
+    }
+
+    // Normalize and validate testcases
+    let normalizedTestCases;
+    try {
+      normalizedTestCases = testCases.map((tc, idx) => {
+        if (typeof tc !== 'object' || tc === null) {
+          throw new Error(`Testcase at index ${idx} must be a valid object.`);
+        }
+        return {
+          input: typeof tc.input === 'string' ? tc.input : (tc.input !== undefined && tc.input !== null ? String(tc.input) : ''),
+          expectedOutput: typeof tc.expectedOutput === 'string' ? tc.expectedOutput : (tc.expectedOutput !== undefined && tc.expectedOutput !== null ? String(tc.expectedOutput) : '')
+        };
+      });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // Validate execution limits
+    let validatedTimeLimit = 2000;
+    if (timeLimit !== undefined && timeLimit !== null) {
+      const num = Number(timeLimit);
+      if (isNaN(num) || num < 500 || num > 10000) {
+        return res.status(400).json({ error: 'timeLimit must be a number between 500 and 10000 ms.' });
+      }
+      validatedTimeLimit = num;
+    }
+
+    let validatedMemoryLimit = 128;
+    if (memoryLimit !== undefined && memoryLimit !== null) {
+      const num = Number(memoryLimit);
+      if (isNaN(num) || num < 16 || num > 512) {
+        return res.status(400).json({ error: 'memoryLimit must be a number between 16 and 512 MB.' });
+      }
+      validatedMemoryLimit = num;
     }
 
     // 1. Create a submission document in PENDING state
     const submission = new Submission({
       code,
       language,
-      testCases,
+      testCases: normalizedTestCases,
       verdict: 'PENDING'
     });
     await submission.save();
@@ -33,9 +72,9 @@ exports.submitCode = async (req, res) => {
           submission._id.toString(),
           code,
           language,
-          testCases,
-          timeLimit || 2000,
-          memoryLimit || 128
+          normalizedTestCases,
+          validatedTimeLimit,
+          validatedMemoryLimit
         );
 
         if (rawResults.verdict === 'CE') {

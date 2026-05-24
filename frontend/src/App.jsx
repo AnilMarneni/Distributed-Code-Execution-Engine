@@ -6,6 +6,17 @@ import { Code2, Play, Terminal, Database, RefreshCw, PlusCircle, CheckCircle, Fi
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
+const VERDICT_LABELS = {
+  AC: 'Accepted',
+  WA: 'Wrong Answer',
+  TLE: 'Execution Timeout Exceeded',
+  RTE: 'Runtime Error',
+  CE: 'Compilation Error',
+  SYSTEM_ERROR: 'System Error',
+  PENDING: 'Pending',
+  RUNNING: 'Running'
+};
+
 const DEFAULT_SNIPPETS = {
   cpp: `#include <iostream>
 using namespace std;
@@ -150,7 +161,7 @@ export default function App() {
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Code2 style={{ color: 'var(--color-accent)', width: '22px', height: '22px' }} />
-          <span style={{ fontSize: '15px', fontWeight: 'bold', trackingTight: '0.05em' }}>
+          <span style={{ fontSize: '15px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
             Code execution sandbox
           </span>
         </div>
@@ -294,10 +305,22 @@ export default function App() {
                       padding: '2px 6px',
                       borderRadius: '4px',
                       border: '1px solid rgba(255,255,255,0.05)',
-                      backgroundColor: item.verdict === 'AC' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)',
-                      color: item.verdict === 'AC' ? 'var(--color-success)' : 'var(--color-error)'
+                      backgroundColor: item.verdict === 'AC' 
+                        ? 'rgba(46, 204, 113, 0.1)' 
+                        : item.verdict === 'RUNNING' 
+                        ? 'rgba(102, 252, 241, 0.1)'
+                        : item.verdict === 'PENDING'
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(231, 76, 60, 0.1)',
+                      color: item.verdict === 'AC' 
+                        ? 'var(--color-success)' 
+                        : item.verdict === 'RUNNING'
+                        ? 'var(--color-accent)'
+                        : item.verdict === 'PENDING'
+                        ? 'var(--color-text-secondary)'
+                        : 'var(--color-error)'
                     }}>
-                      {item.verdict}
+                      {VERDICT_LABELS[item.verdict] || item.verdict}
                     </span>
                   </div>
                 ))}

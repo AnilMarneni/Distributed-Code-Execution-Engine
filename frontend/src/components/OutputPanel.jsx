@@ -48,6 +48,20 @@ export default function OutputPanel({ submission, isRunning }) {
     }
   };
 
+  const getVerdictLabel = (verdict) => {
+    switch (verdict) {
+      case 'AC': return 'Accepted';
+      case 'WA': return 'Wrong Answer';
+      case 'TLE': return 'Execution Timeout Exceeded';
+      case 'RTE': return 'Runtime Error';
+      case 'CE': return 'Compilation Error';
+      case 'SYSTEM_ERROR': return 'System Error';
+      case 'PENDING': return 'Pending';
+      case 'RUNNING': return 'Running';
+      default: return verdict;
+    }
+  };
+
   return (
     <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '15px', borderBottom: 'none' }}>
       <div className="panel-title">Execution Results</div>
@@ -64,7 +78,7 @@ export default function OutputPanel({ submission, isRunning }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ fontSize: '13px', fontWeight: 'bold' }}>Verdict:</span>
-          <span className={getVerdictBadgeClass(submission.verdict)}>{submission.verdict}</span>
+          <span className={getVerdictBadgeClass(submission.verdict)}>{getVerdictLabel(submission.verdict)}</span>
         </div>
         {submission.verdict !== 'PENDING' && submission.verdict !== 'RUNNING' && submission.verdict !== 'CE' && (
           <div style={{ display: 'flex', gap: '15px', fontSize: '12px', color: 'var(--color-text-secondary)' }}>
@@ -131,18 +145,18 @@ export default function OutputPanel({ submission, isRunning }) {
                 borderBottom: '1px solid var(--color-border)'
               }}>
                 <span style={{ fontWeight: 'bold', color: 'var(--color-text-secondary)' }}>Test Case #{index + 1}</span>
-                <span className={getVerdictBadgeClass(res.status)}>{res.status}</span>
+                <span className={getVerdictBadgeClass(res.status)}>{getVerdictLabel(res.status)}</span>
               </div>
               <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>Input:</div>
-                  <pre style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontSize: '12px', overflowX: 'auto' }}>
+                  <pre style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontSize: '12px', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
                     {res.input || '(empty)'}
                   </pre>
                 </div>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '4px' }}>Expected Output:</div>
-                  <pre style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontSize: '12px', overflowX: 'auto', color: 'var(--color-success)' }}>
+                  <pre style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '6px 10px', borderRadius: '4px', fontFamily: 'var(--font-mono)', fontSize: '12px', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'var(--color-success)' }}>
                     {res.expectedOutput || '(empty)'}
                   </pre>
                 </div>
@@ -155,6 +169,8 @@ export default function OutputPanel({ submission, isRunning }) {
                     fontFamily: 'var(--font-mono)',
                     fontSize: '12px',
                     overflowX: 'auto',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
                     color: res.status === 'AC' ? 'var(--color-success)' : 'var(--color-error)'
                   }}>
                     {res.output || '(no output)'}

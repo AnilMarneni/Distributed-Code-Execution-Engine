@@ -1,5 +1,7 @@
 # Secure Multi-Language Code Execution Platform
 
+![Platform Screenshot](docs/screenshot.png)
+
 A polished, systems-focused MERN stack application designed to securely execute and evaluate untrusted user code in C++, Python, and JavaScript. The system utilizes Docker containerization to enforce basic security constraints (CPU, memory, process limits, and network isolation) and persists execution records in MongoDB.
 
 Built as a portfolio project demonstrating REST API design, isolated code execution pipelines, and systems programming concepts for SDE and backend engineering roles.
@@ -9,6 +11,8 @@ Built as a portfolio project demonstrating REST API design, isolated code execut
 ## 🏗️ System Architecture
 
 The platform runs a lightweight execution pipeline:
+
+![System Architecture Diagram](docs/architecture-diagram.png)
 
 ```
 React Frontend (Vite)
