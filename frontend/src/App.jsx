@@ -69,6 +69,15 @@ export default function App() {
     fetchHistory();
   }, []);
 
+  // Clean up polling interval on unmount to prevent leaks
+  useEffect(() => {
+    return () => {
+      if (pollingId) {
+        clearInterval(pollingId);
+      }
+    };
+  }, [pollingId]);
+
   // Update default code when language changes
   const handleLanguageChange = (e) => {
     const lang = e.target.value;
@@ -161,9 +170,9 @@ export default function App() {
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Code2 style={{ color: 'var(--color-accent)', width: '22px', height: '22px' }} />
-          <span style={{ fontSize: '15px', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-            Code execution sandbox
-          </span>
+          <h1 style={{ fontSize: '15px', fontWeight: 'bold', letterSpacing: '0.05em', margin: 0 }}>
+            Secure Code Execution Platform
+          </h1>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn btn-secondary" onClick={handleNewSubmission} style={{ padding: '6px 12px', fontSize: '12px', width: 'auto' }}>
@@ -173,7 +182,7 @@ export default function App() {
       </header>
 
       {/* Workspace */}
-      <div className="main-content">
+      <main className="main-content">
         
         {/* Monaco Editor Section */}
         <div className="editor-section">
@@ -329,7 +338,7 @@ export default function App() {
           </div>
         </div>
 
-      </div>
+      </main>
     </div>
   );
 }
